@@ -6,12 +6,23 @@ const Database = require("better-sqlite3");
  * @param {string} sqlitePath Path relative to BE cwd or absolute
  */
 function openDatabase(sqlitePath) {
-  const resolved = path.isAbsolute(sqlitePath)
+  let resolved = path.isAbsolute(sqlitePath)
     ? sqlitePath
     : path.join(process.cwd(), sqlitePath);
+  if (process.env.VERCEL === "1" && resolved.startsWith("/var/task")) {
+    resolved = path.join("/tmp", path.basename(resolved) || "centralretail.db");
+  }
   const dir = path.dirname(resolved);
   if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch (err) {
+      if (err.code === "ENOENT" && process.env.VERCEL === "1") {
+        resolved = path.join("/tmp", path.basename(resolved) || "centralretail.db");
+      } else {
+        throw err;
+      }
+    }
   }
   const db = new Database(resolved);
   db.pragma("foreign_keys = ON");

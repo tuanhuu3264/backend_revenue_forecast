@@ -1,5 +1,18 @@
+const path = require("path");
 require("./loadEnv");
 const { resolveGeminiApiKey } = require("./gemini_key");
+
+function resolveSqlitePath() {
+  const raw = (process.env.SQLITE_PATH || "").trim();
+  const onVercel = process.env.VERCEL === "1";
+  if (onVercel) {
+    if (raw && path.isAbsolute(raw) && raw.startsWith("/tmp")) {
+      return raw;
+    }
+    return "/tmp/centralretail.db";
+  }
+  return raw || "data/app.db";
+}
 
 const config = {
   port: Number(process.env.PORT) || 3001,
@@ -10,9 +23,7 @@ const config = {
   forecastConfidencePct: Number(process.env.FORECAST_CONFIDENCE_PCT) || 5,
   jwtSecret: process.env.JWT_SECRET || "dev-only-change-me",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  sqlitePath:
-    process.env.SQLITE_PATH ||
-    (process.env.VERCEL === "1" ? "/tmp/centralretail.db" : "data/app.db"),
+  sqlitePath: resolveSqlitePath(),
 };
 
 Object.defineProperty(config, "geminiApiKey", {
