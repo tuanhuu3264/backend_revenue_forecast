@@ -10,8 +10,9 @@ const config = {
   forecastConfidencePct: Number(process.env.FORECAST_CONFIDENCE_PCT) || 5,
   jwtSecret: process.env.JWT_SECRET || "dev-only-change-me",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  /** MVP / demo: file SQLite cục bộ. Production nên chuyển Postgres (hoặc tương đương) + volume nếu vẫn cần file. */
-  sqlitePath: process.env.SQLITE_PATH || "data/app.db",
+  sqlitePath:
+    process.env.SQLITE_PATH ||
+    (process.env.VERCEL === "1" ? "/tmp/centralretail.db" : "data/app.db"),
 };
 
 Object.defineProperty(config, "geminiApiKey", {
