@@ -1,0 +1,29 @@
+{
+  "name": "be",
+  "version": "1.0.0",
+  "description": "Revenue forecasting service",
+  "main": "cmd/main.js",
+  "scripts": {
+    "build": "node --check cmd/main.js && node scripts/verify-revenue-payload.js",
+    "start": "node cmd/main.js",
+    "dev": "node cmd/main.js",
+    "verify:setup": "node scripts/verify-be-setup.js",
+    "verify:payload": "node scripts/verify-revenue-payload.js",
+    "check": "npm run build && node scripts/verify-be-setup.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.14.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.8.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "node-cron": "^4.2.1"
+  }
+}
