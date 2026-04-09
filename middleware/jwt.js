@@ -38,7 +38,12 @@ function requireJwt(config) {
     }
     try {
       const payload = verifyAccessToken(config, token);
-      req.user = { id: payload.sub, email: payload.email };
+      const id = Number(payload.sub);
+      if (!Number.isFinite(id) || id < 1) {
+        res.status(401).json({ message: "Invalid token subject" });
+        return;
+      }
+      req.user = { id, email: payload.email };
       next();
     } catch {
       res.status(401).json({ message: "Invalid or expired token" });

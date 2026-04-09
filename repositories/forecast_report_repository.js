@@ -30,6 +30,19 @@ class ForecastReportRepository {
   }
 
   /**
+   * Chỉ trả về id nếu còn trong bảng users — tránh FOREIGN KEY failed (JWT cũ, DB /tmp mới, v.v.).
+   * @param {unknown} raw
+   * @returns {number | null}
+   */
+  resolveFkUserId(raw) {
+    if (raw == null || raw === "") return null;
+    const id = Number(raw);
+    if (!Number.isFinite(id) || id < 1) return null;
+    const row = this.db.prepare("SELECT 1 AS ok FROM users WHERE id = ?").get(id);
+    return row ? id : null;
+  }
+
+  /**
    * @param {{
    *   createdAt: string;
    *   triggerSource: string;
@@ -44,10 +57,11 @@ class ForecastReportRepository {
    * }} row
    */
   insert(row) {
+    const fkUserId = this.resolveFkUserId(row.userId);
     const info = this.insertStmt.run(
       row.createdAt,
       row.triggerSource,
-      row.userId,
+      fkUserId,
       row.prompt,
       row.agentProvider,
       JSON.stringify(row.forecast ?? []),
