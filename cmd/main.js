@@ -1,43 +1,12 @@
-const express = require("express");
-const cors = require("cors");
 const cron = require("node-cron");
 
 const { config } = require("../packages/config");
 const { beEnvPath } = require("../packages/loadEnv");
-const { createFetchRevenueRows } = require("../packages/consims_client");
-const { runGeminiRevenueAgent } = require("../packages/gemini_agent");
-const { openDatabase } = require("../repositories/sqlite_db");
-const { UserRepository } = require("../repositories/user_repository");
-const { ForecastReportRepository } = require("../repositories/forecast_report_repository");
-const { ForecastCache } = require("../repositories/forecast_cache");
-const { AuthService } = require("../services/auth_service");
-const { RevenueForecastService } = require("../services/revenue_forecast_service");
-const { requireJwt } = require("../middleware/jwt");
-const { registerRoutes } = require("../controllers/routes");
+const { getApp, getRevenueForecastService } = require("./http_stack");
 
 const FORECAST_CRON_SCHEDULE = "0 8 * * *";
 
-function buildApp() {
-  const db = openDatabase(config.sqlitePath);
-  const userRepository = new UserRepository(db);
-  const authService = new AuthService({ config, userRepository });
-
-  const cache = new ForecastCache();
-  const reportRepository = new ForecastReportRepository(db);
-  const fetchRows = createFetchRevenueRows(config);
-  const revenueForecastService = new RevenueForecastService({
-    config,
-    cache,
-    reportRepository,
-    fetchRows,
-    runGeminiRevenueAgent,
-  });
-
-  return { authService, revenueForecastService };
-}
-
-const { authService, revenueForecastService } = buildApp();
-const auth = requireJwt(config);
+const app = getApp();
 
 console.log(
   `[boot] NODE_ENV=${process.env.NODE_ENV || "(unset)"} port=${config.port} pid=${process.pid} gemini=${(config.geminiApiKey || "").trim() ? "yes" : "NO"}`
@@ -48,11 +17,7 @@ if (!(config.geminiApiKey || "").trim()) {
   );
 }
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-registerRoutes(app, { config, auth, authService, revenueForecastService });
+const revenueForecastService = getRevenueForecastService();
 
 cron.schedule(FORECAST_CRON_SCHEDULE, async () => {
   try {
